@@ -1,4 +1,5 @@
 import re
+import random
 
 from ..models.gsheet_model import Product
 from ..processes.crwl import extract_data
@@ -48,6 +49,9 @@ def update_by_min_price_or_max_price(
     else:
         target_price = min_price
 
+    # Make sure price % 100 == 0
+    target_price = itemku_api.valid_price(target_price)
+
     product_id = extract_product_id_from_product_link(product.Product_link)
 
     update_product_price(
@@ -64,8 +68,19 @@ def calculate_competitive_price(
     compare_price: int,
 ) -> int:
     if compare_price - product.DONGIAGIAM_MAX >= min_price:
-        return compare_price - product.DONGIAGIAM_MAX
-    return min_price
+        min_target = compare_price - product.DONGIAGIAM_MAX
+    else:
+        min_target = min_price
+    if compare_price - product.DONGIAGIAM_MIN >= min_price:
+        max_target = compare_price - product.DONGIAGIAM_MIN
+    else:
+        max_target = min_price
+
+    target_price = random.randint(min_target, max_target)
+
+    valid_target_price = itemku_api.valid_price(target_price)
+
+    return valid_target_price
 
 
 def check_product_compare_flow(
@@ -121,6 +136,13 @@ def check_product_compare_flow(
             product=product,
             min_price=min_price,
             compare_price=min_price_product.price,
+        )
+
+        update_product_price(
+            product_id=extract_product_id_from_product_link(
+                product_link=product.Product_link
+            ),
+            target_price=target_price,
         )
 
         note_message, last_update_message = update_with_comparing_seller_message(

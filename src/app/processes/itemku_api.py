@@ -10,6 +10,8 @@ import hashlib
 
 import json
 
+from ..utils.logger import logger
+
 
 def base64_url_encode(data):
     """Encodes data using base64 URL encoding without padding."""
@@ -50,11 +52,15 @@ class ItemkuAPI:
     ) -> None:
         pass
 
+    def valid_price(self, price: int) -> int:
+        return int(round(float(price) / 100, 0) * 100)
+
     def update_price(
         self,
         product_id: int,
         new_price: int,
     ):
+        logger.info("Call api update price")
         nonce = str(int(datetime.now().timestamp()))
 
         payload = {
@@ -66,8 +72,6 @@ class ItemkuAPI:
             nonce=nonce,
             payload=payload,
         )
-
-        print(token)
 
         header = {
             "X-Api-Key": os.environ["ITEMKU_API_KEY"],
