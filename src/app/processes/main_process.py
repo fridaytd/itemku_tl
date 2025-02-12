@@ -16,10 +16,10 @@ def update_product_price(
     product_id: int,
     target_price: int,
 ):
-    # itemku_api.update_price(
-    #     product_id=product_id,
-    #     new_price=target_price,
-    # )
+    itemku_api.update_price(
+        product_id=product_id,
+        new_price=target_price,
+    )
 
     return
 
