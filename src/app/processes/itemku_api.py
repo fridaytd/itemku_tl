@@ -53,7 +53,7 @@ class ItemkuAPI:
         pass
 
     def valid_price(self, price: int) -> int:
-        return int(round(float(price) / 100, 0) * 100)
+        return int(round(float(price) / 10, 0) * 10)
 
     def update_price(
         self,

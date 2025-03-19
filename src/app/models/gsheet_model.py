@@ -98,6 +98,8 @@ class Product(ColSheetModel):
     SHEET_BLACKLIST: Annotated[str, {COL_META_FIELD_NAME: "V"}]
     CELL_BLACKLIST: Annotated[str, {COL_META_FIELD_NAME: "W"}]
     RELAX_TIME: Annotated[int, {COL_META_FIELD_NAME: "X"}]
+    INCLUDE_KEYWORD: Annotated[str | None, {COL_META_FIELD_NAME: "Y"}] = None
+    EXCLUDE_KEYWORD: Annotated[str | None, {COL_META_FIELD_NAME: "Z"}] = None
 
     def min_price(self) -> int:
         g_client = service_account(ROOT_PATH.joinpath(os.environ["KEYS_PATH"]))

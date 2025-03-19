@@ -11,6 +11,7 @@ from ..utils.update_messages import (
 )
 from ..models.crwl_api_models import Product as CrwlProduct
 from ..utils.logger import logger
+from ..shared.consts import KEYWORD_SPLIT_BY_CHARACTER
 
 
 def update_product_price(
@@ -102,16 +103,40 @@ def check_product_compare_flow(
     min_price_product: CrwlProduct | None = None
 
     for _product in products:
+        # Check shopname not in backlist
         if _product.seller.shop_name not in blacklist:
-            if (max_price and min_price <= _product.price <= max_price) or (
-                max_price is None and min_price <= _product.price
+            # Check Include and Exclude keyword in product name
+            if (
+                (
+                    product.INCLUDE_KEYWORD
+                    and all(
+                        keyword.lower() in _product.name.lower()
+                        for keyword in product.INCLUDE_KEYWORD.split(
+                            KEYWORD_SPLIT_BY_CHARACTER
+                        )
+                    )
+                )
+                or product.INCLUDE_KEYWORD is None
+            ) and (
+                product.EXCLUDE_KEYWORD
+                and not any(
+                    keyword.lower() in _product.name.lower()
+                    for keyword in product.EXCLUDE_KEYWORD.split(
+                        KEYWORD_SPLIT_BY_CHARACTER
+                    )
+                )
+                or product.EXCLUDE_KEYWORD is None
             ):
-                valid_products.append(_product)
-                if (
-                    min_price_product is None
-                    or _product.price < min_price_product.price
+                # Check product price in valid range
+                if (max_price and min_price <= _product.price <= max_price) or (
+                    max_price is None and min_price <= _product.price
                 ):
-                    min_price_product = _product
+                    valid_products.append(_product)
+                    if (
+                        min_price_product is None
+                        or _product.price < min_price_product.price
+                    ):
+                        min_price_product = _product
 
     logger.info(f"Number of product: {len(products)}")
     logger.info(f"Valid products: {len(valid_products)}")
