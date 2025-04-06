@@ -39,7 +39,7 @@ class Product(BaseModel):
     min_order: int
     price: int
     # server_id: int
-    # server_name: str
+    server_name: str | None = None
     stock: int
     base_unit: int
     seller: Seller

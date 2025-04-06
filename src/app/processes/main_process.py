@@ -100,6 +100,8 @@ def check_product_compare_flow(
 
     valid_products = []
 
+    lower_min_price_products = []
+
     min_price_product: CrwlProduct | None = None
 
     for _product in products:
@@ -110,7 +112,12 @@ def check_product_compare_flow(
                 (
                     product.INCLUDE_KEYWORD
                     and all(
-                        keyword.lower() in _product.name.lower()
+                        (
+                            keyword.lower()
+                            in _product.name.lower() + _product.server_name.lower()
+                            if _product.server_name
+                            else ""
+                        )
                         for keyword in product.INCLUDE_KEYWORD.split(
                             KEYWORD_SPLIT_BY_CHARACTER
                         )
@@ -120,7 +127,12 @@ def check_product_compare_flow(
             ) and (
                 product.EXCLUDE_KEYWORD
                 and not any(
-                    keyword.lower() in _product.name.lower()
+                    (
+                        keyword.lower()
+                        in _product.name.lower() + _product.server_name.lower()
+                        if _product.server_name
+                        else ""
+                    )
                     for keyword in product.EXCLUDE_KEYWORD.split(
                         KEYWORD_SPLIT_BY_CHARACTER
                     )
@@ -137,6 +149,8 @@ def check_product_compare_flow(
                         or _product.price < min_price_product.price
                     ):
                         min_price_product = _product
+                if _product.price < min_price:
+                    lower_min_price_products.append(_product)
 
     logger.info(f"Number of product: {len(products)}")
     logger.info(f"Valid products: {len(valid_products)}")
@@ -149,7 +163,10 @@ def check_product_compare_flow(
         )
 
         note_message, last_update_message = update_with_min_price_message(
-            price=target_price, price_min=min_price, price_max=max_price
+            price=target_price,
+            price_min=min_price,
+            price_max=max_price,
+            lower_min_price_products=lower_min_price_products,
         )
         logger.info(note_message)
         product.Note = note_message
@@ -176,6 +193,7 @@ def check_product_compare_flow(
             price_max=max_price,
             comparing_price=min_price_product.price,
             comparing_seller=min_price_product.seller.shop_name,
+            lower_min_price_products=lower_min_price_products,
         )
         logger.info(note_message)
         product.Note = note_message
