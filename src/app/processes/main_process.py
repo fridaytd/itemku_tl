@@ -14,6 +14,13 @@ from ..utils.logger import logger
 from ..shared.consts import KEYWORD_SPLIT_BY_CHARACTER
 
 
+def __filter_lower_than_target_price(
+    products: list[CrwlProduct],
+    target_price: int,
+) -> list[CrwlProduct]:
+    return [product for product in products if product.price < target_price]
+
+
 def update_product_price(
     product_id: int,
     target_price: int,
@@ -100,7 +107,7 @@ def check_product_compare_flow(
 
     valid_products = []
 
-    lower_min_price_products = []
+    valid_keywords_products: list[CrwlProduct] = []
 
     min_price_product: CrwlProduct | None = None
 
@@ -139,6 +146,8 @@ def check_product_compare_flow(
                 )
                 or product.EXCLUDE_KEYWORD is None
             ):
+                # print(f"VALID: {_product}")
+                valid_keywords_products.append(_product)
                 # Check product price in valid range
                 if (max_price and min_price <= _product.price <= max_price) or (
                     max_price is None and min_price <= _product.price
@@ -149,8 +158,6 @@ def check_product_compare_flow(
                         or _product.price < min_price_product.price
                     ):
                         min_price_product = _product
-                if _product.price < min_price:
-                    lower_min_price_products.append(_product)
 
     logger.info(f"Number of product: {len(products)}")
     logger.info(f"Valid products: {len(valid_products)}")
@@ -166,7 +173,9 @@ def check_product_compare_flow(
             price=target_price,
             price_min=min_price,
             price_max=max_price,
-            lower_min_price_products=lower_min_price_products,
+            lower_min_price_products=__filter_lower_than_target_price(
+                products=valid_keywords_products, target_price=target_price
+            ),
         )
         logger.info(note_message)
         product.Note = note_message
@@ -193,7 +202,9 @@ def check_product_compare_flow(
             price_max=max_price,
             comparing_price=min_price_product.price,
             comparing_seller=min_price_product.seller.shop_name,
-            lower_min_price_products=lower_min_price_products,
+            lower_min_price_products=__filter_lower_than_target_price(
+                products=valid_keywords_products, target_price=target_price
+            ),
         )
         logger.info(note_message)
         product.Note = note_message
