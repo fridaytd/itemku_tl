@@ -8,6 +8,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "beautifulsoup4>=4.12.3",
     "pytz>=2025.1",
+    "seleniumbase>=4.37.2",
 ]
 
 requires-python = ">= 3.8"

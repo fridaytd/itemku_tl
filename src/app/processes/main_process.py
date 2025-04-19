@@ -92,6 +92,7 @@ def calculate_competitive_price(
 
 
 def check_product_compare_flow(
+    sb,
     product: Product,
 ):
     min_price = product.min_price()
@@ -99,6 +100,7 @@ def check_product_compare_flow(
     blacklist = product.blacklist()
 
     crwl_api_res = extract_data(
+        sb,
         api=crwl_api,
         url=product.PRODUCT_COMPARE,
     )
@@ -237,11 +239,12 @@ def no_check_product_compare_flow(
 
 
 def process(
+    sb,
     product: Product,
 ):
     if product.CHECK_PRODUCT_COMPARE == 1:
         logger.info("Check product compare flow")
-        check_product_compare_flow(product)
+        check_product_compare_flow(sb, product)
 
     else:
         logger.info("No check product compare flow")

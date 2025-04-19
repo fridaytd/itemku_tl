@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import time
 from gspread.worksheet import Worksheet
+from seleniumbase import SB
 
 
 from app.utils.logger import logger
@@ -32,7 +33,7 @@ def get_run_indexes(sheet: Worksheet) -> list[int]:
     return run_indexes
 
 
-def main():
+def main(sb):
     logger.info("Start running")
     run_indexes = get_run_indexes(worksheet)
     logger.info(f"Run index: {run_indexes}")
@@ -41,7 +42,7 @@ def main():
         try:
             product = Product.get(worksheet, index)
 
-            process(product)
+            process(sb, product)
             logger.info(f"Sleep for {product.RELAX_TIME}s")
             time.sleep(product.RELAX_TIME)
         except ValidationError as e:
@@ -97,6 +98,9 @@ def main():
 
 while True:
     try:
-        main()
+        with SB(headless=True, uc=True) as sb:
+            url = "https://www.itemku.com/"
+            sb.activate_cdp_mode(url)
+            main(sb)
     except Exception:
         time.sleep(30)

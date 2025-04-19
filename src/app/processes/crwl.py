@@ -1,5 +1,6 @@
-import requests
+import time
 from bs4 import BeautifulSoup
+
 
 from ..shared.exceptions import CrwlError
 from ..models.crwl_models import NextData1st, NextData2nd
@@ -9,16 +10,19 @@ from ..utils.decorators import retry_on_fail
 
 
 def get_soup(
+    sb,
     url: str,
 ) -> BeautifulSoup:
-    res = requests.get(url)
+    sb.cdp.get(url)
+    time.sleep(1)
+    page_source = sb.cdp.get_page_source()
 
-    try:
-        res.raise_for_status()
-    except Exception:
-        raise CrwlError(f"Can not get soup!!!. Status code: {res.status_code}")
+    # try:
+    #     res.raise_for_status()
+    # except Exception:
+    #     raise CrwlError(f"Can not get soup!!!. Status code: {res.status_code}")
 
-    return BeautifulSoup(res.text, "html.parser")
+    return BeautifulSoup(page_source, "html.parser")
 
 
 def extract_next_data(
@@ -102,10 +106,11 @@ def find_item_info_group_id(
 
 @retry_on_fail(max_retries=3, sleep_interval=2)
 def extract_data(
+    sb,
     api: CrwlAPI,
     url: str,
 ) -> CrwlAPIRes:
-    soup = get_soup(url)
+    soup = get_soup(sb, url)
 
     next_data = extract_next_data(soup)
 
