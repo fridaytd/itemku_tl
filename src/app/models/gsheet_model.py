@@ -1,12 +1,15 @@
 import os
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, Self
+from typing import Annotated, Self, Final
 from gspread.worksheet import Worksheet
 from gspread.auth import service_account
 
 from app.shared.exceptions import SheetError
 from app.shared.consts import COL_META_FIELD_NAME
 from app.utils.paths import ROOT_PATH
+
+
+IS_UPDATE_META: Final[str] = "is_update"
 
 
 class ColSheetModel(BaseModel):
@@ -23,6 +26,18 @@ class ColSheetModel(BaseModel):
             if hasattr(field_info, "metadata"):
                 for metadata in field_info.metadata:
                     if COL_META_FIELD_NAME in metadata:
+                        mapping_fields[field_name] = metadata[COL_META_FIELD_NAME]
+                        break
+
+        return mapping_fields
+
+    @classmethod
+    def update_mapping_fields(cls) -> dict:
+        mapping_fields = {}
+        for field_name, field_info in cls.model_fields.items():
+            if hasattr(field_info, "metadata"):
+                for metadata in field_info.metadata:
+                    if COL_META_FIELD_NAME in metadata and IS_UPDATE_META in metadata:
                         mapping_fields[field_name] = metadata[COL_META_FIELD_NAME]
                         break
 
@@ -58,7 +73,7 @@ class ColSheetModel(BaseModel):
     def update(
         self,
     ) -> None:
-        mapping_dict = self.mapping_fields()
+        mapping_dict = self.update_mapping_fields()
         model_dict = self.model_dump(mode="json")
 
         update_batch = []
@@ -77,8 +92,10 @@ class Product(ColSheetModel):
     # highlight: Annotated[str, {COL_META_FIELD_NAME: "A"}]
     CHECK: Annotated[int, {COL_META_FIELD_NAME: "B"}]
     Product_name: Annotated[str, {COL_META_FIELD_NAME: "C"}]
-    Note: Annotated[str | None, {COL_META_FIELD_NAME: "D"}] = None
-    Last_update: Annotated[str | None, {COL_META_FIELD_NAME: "E"}] = None
+    Note: Annotated[str | None, {COL_META_FIELD_NAME: "D", IS_UPDATE_META: True}] = None
+    Last_update: Annotated[
+        str | None, {COL_META_FIELD_NAME: "E", IS_UPDATE_META: True}
+    ] = None
     Product_link: Annotated[str, {COL_META_FIELD_NAME: "F"}]
     CHECK_PRODUCT_COMPARE: Annotated[int, {COL_META_FIELD_NAME: "G"}]
     PRODUCT_COMPARE: Annotated[str, {COL_META_FIELD_NAME: "H"}]
